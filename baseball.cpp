@@ -576,47 +576,6 @@ int game3(uchar* data) {
                 }
             }
         }
-
-        //Sleep(8);
-        //recordimage(data);
-
-        std::vector<std::vector<area_t<int>>> area;
-        //getareas(tempdata, screenr.w, screenr.h, 1, area);
-
-        int mi, mv;
-        if (area.size()) {
-            mv = area[0].size();
-            mi = 0;
-            for (int i = 0; i < area.size(); i++) {
-                if (area[i].size() > mv) {
-                    mv = area[i].size();
-                    mi = i;
-                }
-            }
-            peakadv_t peak;
-            getpeakparaadv(area[mi], peak);
-
-            if (float(peak.yc) != lasty) {
-                //printf("r:%f,%f\n", peak.yc, lasty);
-                xv.emplace_back(peak.xc - 480);
-                yv.emplace_back(peak.yc - 200);
-                printf("%f,%f\n", peak.xc, peak.yc);
-            }
-
-            if (xv.size() >= 4) {
-                float shift = getshift(xv, yv);
-                printf("%f\n", shift);
-                game3move(shift * 2.0f, 0.0f);
-
-            }
-
-            if (peak.yc > 275) {
-                game3attack(peak.xc * 2 - 960);
-            }
-
-            lasty = peak.yc;
-        }
-
     }
     else {
         if (ingame) {
