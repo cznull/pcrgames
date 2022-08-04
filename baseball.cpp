@@ -1,6 +1,3 @@
-// pcrclick.cpp : Defines the entry point for the application.
-//
-
 
 #include <Windows.h>
 #include <opencv2/opencv.hpp>
@@ -454,10 +451,11 @@ int game3attack(float x) {
     return 0;
 }
 
-float getshift(std::vector<float>& xv, std::vector<float>& yv) {
+float getshift(std::vector<float>& xv, std::vector<float>& yv, float& yt,float &yshift) {
 
     if (xv[1] > 995.0f) {
-        return 1.3f * (xv[1] + xv[2] + xv[3] + xv[4] - 3855);
+        yt = 550.0f;
+        return 1.4f * (xv[1] + xv[2] + xv[3] + xv[4] - 3858);
     }
 
     Eigen::MatrixXf ym, xm;
@@ -482,8 +480,15 @@ float getshift(std::vector<float>& xv, std::vector<float>& yv) {
     float shift;
     shift = cm(0) + 833.0f * cm(1) - 959.0f;
 
-    if (abs(shift) > 150.0f) {
-        shift = 0.0f;
+    if (shift > 150.0f) {
+        yshift = -20.0f;
+        printf("shift:%f\n", shift);
+        shift = 20.0f * (xv[5] - xv[4] - 10.0f);
+    }
+    else if (shift < -150.0f) {
+        yshift = -20.0f;
+        printf("shift:%f\n", shift);
+        shift = 20.0f * (xv[5] - xv[4] + 10.0f);
     }
 
     return shift;
@@ -492,6 +497,7 @@ float getshift(std::vector<float>& xv, std::vector<float>& yv) {
 int ingame;
 float lasty;
 std::vector<float> xv, yv;
+float yt;
 
 int game3(uchar* data) {
     tc = GetTickCount64();
@@ -521,6 +527,7 @@ int game3(uchar* data) {
             PostMessage(bbhwndmessage, WM_LBUTTONDOWN, 1, 65536 * 844 + 332);
             printf("down\n");
             ingame = 1;
+            yt = 520.0f;
 
             xv.clear();
             yv.clear();
@@ -539,43 +546,50 @@ int game3(uchar* data) {
         }
         else {
             float x, y;
-            if (game3findfire(screen, x, y)) {
-                printf("firepos:%f\n", x);
-                game3move((x - 950.5f) * 9.0f, 80.0f);
-                if (yv[4] > 376.5f) {
-                    Sleep(90);
-                }
-                else {
-                    Sleep(120);
-                }
-                game3attack(0.0f);
-                return 0;
-            }
             if (xv.size()) {
+                if (game3findfire(screen, x, y)) {
+                    printf("firepos:%f\n", x);
+                    game3move((x - 950.5f) * 9.0f, 80.0f);
+                    if (yv[4] > 376.5f) {
+                        Sleep(90);
+                    }
+                    else {
+                        Sleep(120);
+                    }
+                    game3attack(0.0f);
+                    return 0;
+                }
+
                 //recordimage(data);
                 game3findball(screen, x, y);
+
                 if (y != yv[yv.size() - 1]) {
                     xv.emplace_back(x);
                     yv.emplace_back(y);
                     printf("pos:%f,%f\n", x, y);
 
-                    if (yv.size() >= 4 && y > 460.0f) {
-                        float shift = getshift(xv, yv);
+                    float yshift = 0.0f;
+                    if (yv.size() >= 4 && yv[3] > 460.0f) {
+                        float shift = getshift(xv, yv, yt, yshift);
                         printf("%f\n", shift);
-                        game3move(shift * 1.5f, 0.0f);
+                        game3move(shift * 1.6f, 80.0f);
                     }
-                    else if (y > 480) {
-                        float shift = getshift(xv, yv);
+                    else if (y > 455.0f) {
+                        float shift = getshift(xv, yv, yt, yshift);
                         printf("%f\n", shift);
-                        game3move(shift * 1.5f, 0.0f);
+                        game3move(shift * 1.5f, yshift);
                     }
 
-                    if (y > 550) {
+                    if (y > yt) {
                         game3attack(0.0f);
                     }
                 }
             }
         }
+
+        //Sleep(8);
+        //recordimage(data);
+
     }
     else {
         if (ingame) {
